@@ -1,0 +1,34 @@
+---
+# This playbook deploys DC/OS
+
+- name: apply common configuration to all nodes
+  hosts: all
+  serial: 20
+  become: true
+
+  roles:
+    - common
+
+- name: generate the DC/OS configuration
+  hosts: workstations
+  serial: 20
+  become: true
+
+  roles:
+    - workstation
+
+- name: deploy nodes
+  hosts: [ masters, agents, agents_public]
+  serial: 20
+  become: true
+
+  roles:
+    - node-install
+
+- name: deploy internal lb dns name
+  hosts: masters
+  serial: 1
+  become: true
+
+  roles:
+    - dnsfix

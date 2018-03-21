@@ -1,0 +1,73 @@
+---
+# This playbook contains common plays that will be run on all nodes.
+
+- name: update all packages
+  yum:
+    name: "*"
+    state: latest
+    exclude: docker-engine
+  when: system_updates
+
+- name: enable overlay module
+  template: src=overlay.conf.j2 dest=/etc/modules-load.d/overlay.conf mode=0644
+
+- name: enable docker yum repo
+  template: src=docker.repo.j2 dest=/etc/yum.repos.d/docker.repo mode=0644
+
+- name: create docker systemd directory
+  file: path=/etc/systemd/system/docker.service.d/ state=directory mode=0755
+
+- name: configure docker to use overlay driver
+  template: src=override.conf.j2 dest=/etc/systemd/system/docker.service.d/override.conf mode=0644
+
+- name: install docker packages
+  yum:
+    name: docker-engine-1.11.2-1.el7.centos
+    update_cache: yes
+    state: present
+
+- name: enable docker
+  service:
+    name: docker
+    enabled: yes
+    state: started
+
+- name: allow the default user to use docker
+  user: name="{{ ansible_ssh_user }}" groups=docker append=yes
+
+- name: install system utilities
+  yum:
+    name: "{{ item }}"
+    state: latest
+  with_items:
+    - tar
+    - xz
+    - unzip
+    - curl
+    - ipset
+    - ntp
+
+- name: disable selinux
+  selinux: policy=targeted state=permissive
+
+- name: create group 'nogroup'
+  group: name=nogroup state=present
+
+- name: disable IPv6 for all interfaces
+  sysctl: name="net.ipv6.conf.all.disable_ipv6" value=1 sysctl_set=yes
+
+- name: disable IPv6 for default interface
+  sysctl: name="net.ipv6.conf.default.disable_ipv6" value=1 sysctl_set=yes
+
+- name: disable firewalld
+  service:
+    name: firewalld
+    enabled: false
+    state: stopped
+  ignore_errors: yes
+  
+- name: enable ntpd
+  service:
+    name: ntpd
+    enabled: yes
+    state: started

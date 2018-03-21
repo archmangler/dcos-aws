@@ -1,0 +1,159 @@
+### Variables ###
+
+# Define instance count of the DC/OS nodes
+
+variable "workstation_instance_count" {
+  description = "Number of workstation nodes to launch"
+  default=1 
+}
+
+variable "master_instance_count" {
+  description = "Number of master nodes to launch [1, 3, 5]"
+  default = 3
+}
+
+variable "agent_instance_count" {
+  description = "Number of agent nodes to launch [min 3]"
+  default = 2
+}
+
+variable "instance_type" {
+ default = "c3.8xlarge"
+}
+
+variable "public_agent_instance_count" {
+  description = "Number of public agent nodes to launch [min 1]"
+  default = 2
+}
+
+variable "access_key" {
+  description = "AWS access key"
+  default="AWSYOURAWSKEYID"
+}
+
+variable "secret_key" {
+  description = "AWS secret key"
+  default="AWSYOURAWSSECRETKEY"
+}
+
+variable "region" {
+  default = "eu-central-1"
+}
+
+variable "azs" {
+    default = {
+        # use "aws ec2 describe-availability-zones --region us-east-1"
+        # to figure out the name of the AZs on every region
+        "eu-central-1" = "eu-central-1a,eu-central-1b"
+        "us-west-2" = "us-west-2a,us-west-2b,us-west-2c"
+        "us-east-1" = "us-east-1a,us-east-1b,us-east-1c,us-east-1e"
+        "eu-west-1" = "eu-west-1a,eu-west-1b,eu-west-1c"
+    }
+}
+
+variable "route53_zone_id" {
+  description = "Zone ID for the pre-existing Route 53 DNS zone"
+  default = "ZVBLAHBLAHBLA"
+}
+
+# AMIs for CentOS
+variable "amis" {
+  default = {
+    #eu-central-1 = "ami-9bf712f4"
+    eu-central-1 = "ami-7e19c511"
+    eu-west-1 = "ami-7abd0209"
+    us-west-2 = "ami-d2c924b2"
+    us-east-1 = "ami-6d1c2007"
+  }
+}
+
+variable "ami" {
+  default = {
+    #eu-central-1 = "ami-9bf712f4"
+    eu-central-1 = "ami-7e19c511"
+    eu-west-1 = "ami-7abd0209"
+    us-west-2 = "ami-d2c924b2"
+    us-east-1 = "ami-6d1c2007"
+  }
+} 
+
+variable "subnet_range" {
+  description = "Subnet IP range"
+  default = "10.102.0.0/16"
+}
+
+variable "subnet_dns" {
+  description = "Subnet DNS"
+  default = "10.102.0.2"
+}
+
+#we declare the currently existing dcos_subnets 
+#in use by the target VPC (assumption that this
+#is shared with other DCOS clusters in the VPC)
+variable "dcos_subnet" {
+ #example for eu-west-1/ireland below
+ #default=["subnet-4fd1ce2b","subnet-ff0e1189","subnet-3b0b5063"] 
+ #eu-central-public subnets
+ #default=["subnet-16428c7e","subnet-517f612a"] 
+ #eu-central-1 private subnets
+ default=["subnet-15428c7d","subnet-527f6129"] 
+}
+
+#THESE VARIABLES HACKED IN TO SUPPORT AGENT ONLY DEPLOYMENT
+variable "agent_profile_name" {
+ default="prodmain-agent_profile"
+}
+
+#Here we specify the sg ids of existing security groups 
+#in an existing vpc we're launching dc/os into
+#The assumption is that DC/OS shares the VPC with existing infra
+#And this Terraform  here only manages DC/OS itself, while the 
+#rest of the infra in the VPC is managed by another set of TF code
+#put all subnets in supported by the vpc that you plan to have dcos
+#nodes in
+variable "dcos_subnet_id" {
+ default=["subnet-15428c7d","subnet-527f6129"] 
+}
+
+variable "internal_sg_id" {
+ default="sg-3da47456"
+}
+
+variable "admin_sg_id" {
+ description = "administrative security group hosts the master nodes and the ELBs which serve the master nodes"
+ default="sg-64fb2b0f"
+}
+
+#/VARIABLES HACKED IN TO SUPPORT AGENT ONLY DEPLOYMENT
+#Use this only when adding new agents to an existing DC/OS deployment
+#NOTE: Once DC/OS is using Auto-Scaling groups for self healing this should not be needed
+variable "admin_ip" {
+  description="ip addresses allowed to access to admin endpoints of dc/os"
+  #e.g allow only from: default = ["91.74.235.114/32","91.74.235.115/32","91.74.235.117/32","91.74.235.116/32","91.74.235.118/32","94.200.169.86/32","151.80.253.123/32"]
+  default = ["0.0.0.0/0"]
+}
+
+variable "key_name" {
+  description = "Name of existing AWS key pair to use"
+  default="osadmin"
+}
+
+variable "prefix" {
+  description = "Used for naming instances in AWS (e.g. my-dcos)"
+  default="tl"
+}
+
+variable "owner" {
+  description = "AWS tag of the owner (e.g. Slack username)"
+  default = "twelcome"
+}
+
+variable "expiration" {
+  description = "AWS tag of the expiration time"
+  default = "8hours"
+}
+
+variable "dcos_vpc" {
+ description = "VPC to deploy DCOS into"
+ default = "vpc-whateverid"
+}
